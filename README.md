@@ -1,38 +1,39 @@
-# MTProto Proxy Web UI Manager
+# پنل مدیریت تحت وب برای MTProto Proxy
 
-A simple, secure, and powerful web-based UI to install and manage multiple types of MTProto proxy servers on your Linux machine. This panel acts as a graphical frontend for the powerful command-line scripts originally developed by Hirbod Behnam, allowing you to manage your proxies without ever touching the terminal after the initial setup.
+یک رابط کاربری تحت وب (Web UI) ساده، امن و قدرتمند برای نصب و مدیریت انواع مختلف سرورهای پراکسی MTProto بر روی سرور لینوکس شما. این پنل به عنوان یک رابط گرافیکی برای اسکریپت‌های مدیریتی قدرتمند عمل می‌کند و به شما اجازه می‌دهد پراکسی‌های خود را بدون نیاز به استفاده از ترمینال (پس از نصب اولیه) مدیریت کنید.
 
 
 
-## Features
+## ✨ ویژگی‌ها
 
--   **Graphical Management:** A clean web interface to control your proxy services.
--   **One-Line Installer:** Get the web UI up and running with a single command.
--   **Secure Access:** The panel is protected by a randomly generated password for security.
--   **Multi-Proxy Support:** Manage different proxy implementations from one place:
-    -   Official C Proxy (`MTProtoProxyOfficialInstall.sh`)
-    -   Python Proxy (`MTProtoProxyInstall.sh`)
-    -   Golang (MTG) Proxy (`MTGInstall.sh`)
--   **Service Status Overview:** Quickly check if your proxy services are active, inactive, or not installed.
--   **Direct Command Execution:** Run the underlying scripts with custom arguments directly from the UI and see the real-time output.
-
----
-
-## Requirements
-
-Before you begin, ensure your server meets the following requirements:
-
--   **Operating System:** A modern Linux distribution such as:
-    -   Ubuntu 18.04 or later
-    -   Debian 10 or later
-    -   CentOS 7 or later
--   **Permissions:** You must have **root** access (`sudo`).
--   **Software:** `git` and `curl` must be installed. They are usually pre-installed, but if not, you can install them with your package manager (e.g., `sudo apt install git curl`).
+-   **مدیریت گرافیکی:** یک پنل وب تمیز و کاربرپسند برای کنترل کامل سرویس‌های پراکسی.
+-   **نصب با یک دستور:** پنل وب را تنها با اجرای یک دستور ساده راه‌اندازی کنید.
+-   **دسترسی امن:** ورود به پنل با استفاده از یک رمز عبور تصادفی که در هنگام نصب ساخته می‌شود، محافظت می‌شود.
+-   **پشتیبانی از چند نوع پراکسی:** از یک پنل واحد، چند نوع پراکسی مختلف را مدیریت کنید:
+    -   پراکسی رسمی سی (`MTProtoProxyOfficialInstall.sh`)
+    -   پراکسی پایتون (`MTProtoProxyInstall.sh`)
+    -   پراکسی گولنگ (MTG) (`MTGInstall.sh`)
+-   **مشاهده وضعیت سرویس‌ها:** به سرعت وضعیت سرویس‌های پراکسی خود (فعال، غیرفعال یا نصب نشده) را بررسی کنید.
+-   **اجرای مستقیم دستورات:** اسکریپت‌های مدیریتی را با آرگومان‌های دلخواه مستقیماً از طریق پنل اجرا کرده و خروجی آن را به صورت زنده مشاهده کنید.
 
 ---
 
-## Quick Installation
+## 📋 نیازمندی‌ها
 
-To install the MTProto Proxy Web UI, simply run the following command on your server as the root user:
+قبل از شروع، اطمینان حاصل کنید که سرور شما شرایط زیر را دارد:
 
-```git clone https://github.com/Hamedgunner/MTProtoUI.git && cd MTProtoUI && chmod +x install_webui.sh && sudo ./install_webui.sh
+-   **سیستم‌عامل:** یکی از توزیع‌های مدرن لینوکس مانند:
+    -   اوبونتو (Ubuntu) نسخه 18.04 یا جدیدتر
+    -   دبیان (Debian) نسخه 10 یا جدیدتر
+    -   سنت‌اواس (CentOS) نسخه 7 یا جدیدتر
+-   **سطح دسترسی:** شما باید دسترسی **root** یا `sudo` داشته باشید.
+-   **نرم‌افزار:** ابزارهای `git` و `curl` باید روی سرور شما نصب باشند. این ابزارها معمولاً به صورت پیش‌فرض نصب هستند، اما در غیر این صورت می‌توانید با دستور `sudo apt install git curl` (برای دبیان/اوبونتو) آن‌ها را نصب کنید.
+
+---
+
+## 🚀 نصب سریع و خودکار
+
+برای نصب پنل مدیریت وب، کافیست دستور زیر را به عنوان کاربر root در ترمینال سرور خود اجرا کنید:
+
+```bash
+git clone [https://github.com/Hamedgunner/MTProtoUI.git](https://github.com/Hamedgunner/MTProtoUI.git) && cd MTProtoUI && chmod +x install_webui.sh && sudo ./install_webui.sh
