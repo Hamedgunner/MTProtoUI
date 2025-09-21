@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTProto Proxy Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MTProto Proxy Web UI</h1>
+            <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+        </div>
+
+        <div class="section">
+            <h2>Service Status</h2>
+            <div class="status-grid">
+                {% for service, stat in status.items() %}
+                <div class="status-card">
+                    <h3>{{ service }}</h3>
+                    <p class="status-{{ stat.lower().replace(' ', '-') }}">{{ stat }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Run a Command</h2>
+            <p>Select a script and provide arguments. Refer to the README for available options.</p>
+            <form action="{{ url_for('execute') }}" method="POST">
+                <label for="script">Select Script:</label>
+                <select name="script" id="script" required>
+                    <option value="MTProtoProxyOfficialInstall.sh">Official Proxy</option>
+                    <option value="MTProtoProxyInstall.sh">Python Proxy</option>
+                    <option value="MTGInstall.sh">Golang (MTG) Proxy</option>
+                </select>
+
+                <label for="args">Arguments (optional):</label>
+                <input type="text" id="args" name="args" placeholder="Example: --port 443 --secret YOUR_SECRET">
+
+                <button type="submit">Execute</button>
+            </form>
+        </div>
+
+        {% if output %}
+        <div class="section">
+            <h2>Command Output</h2>
+            <pre class="output-box">{{ output }}</pre>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
