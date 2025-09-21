@@ -1,6 +1,7 @@
 import os
 import subprocess
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+import shlex
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
 
 app = Flask(__name__)
@@ -43,38 +44,82 @@ def logout():
 @login_required
 def index():
     status = get_services_status()
-    return render_template('index.html', status=status)
+    # Pass an empty output so the template doesn't break on first load
+    return render_template('index.html', status=status, output=None, selected_script=None)
 
 @app.route('/execute', methods=['POST'])
 @login_required
 def execute():
-    script = request.form.get('script')
-    args_str = request.form.get('args')
-    
-    if not script:
-        return "Error: No script specified.", 400
+    script_name = request.form.get('script')
+    if not script_name:
+        flash("Error: No script selected.", "error")
+        return redirect(url_for('index'))
 
-    command = f"bash {script} {args_str}"
+    # Base command
+    command_list = ['bash', script_name]
+
+    # --- Build arguments based on the selected script ---
+    # Official Proxy
+    if script_name == 'MTProtoProxyOfficialInstall.sh':
+        port = request.form.get('official_port')
+        secret = request.form.get('official_secret')
+        tag = request.form.get('official_tag')
+        workers = request.form.get('official_workers')
+
+        if port: command_list.extend(['--port', port])
+        if secret: command_list.extend(['--secret', secret])
+        if tag: command_list.extend(['--tag', tag])
+        if workers: command_list.extend(['--workers', workers])
+
+    # Python Proxy
+    elif script_name == 'MTProtoProxyInstall.sh':
+        action = request.form.get('python_action')
+        username = request.form.get('python_username')
+        secret = request.form.get('python_secret')
+        
+        if action and action in ['4', '5']: # Add or Revoke User
+            command_list.append(action)
+            if username:
+                command_list.append(username)
+                if action == '4' and secret: # Only add secret for 'add' action
+                    command_list.append(secret)
+        elif action:
+             command_list.append(action)
+
+
+    # Golang (MTG) Proxy
+    elif script_name == 'MTGInstall.sh':
+        action = request.form.get('mtg_action')
+        if action:
+            command_list.append(action)
+
+    # For manual commands or other scripts
+    else:
+        manual_args = request.form.get('manual_args')
+        if manual_args:
+            command_list.extend(shlex.split(manual_args))
     
-    # Using subprocess to run the command
-    # NOTE: Running shell commands from a web app is a security risk.
-    # This is simplified for this specific use case.
+    # --- Execute the command ---
+    output = ""
     try:
-        # We use a pipe to capture output in a blocking way for simplicity
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        stdout, stderr = process.communicate(timeout=300) # 5-minute timeout
+        process = subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=os.getcwd())
+        stdout, stderr = process.communicate(timeout=300)
         
-        output = f"--- STDOUT ---\n{stdout}\n--- STDERR ---\n{stderr}"
-        
-        # Re-fetch status after execution
-        status = get_services_status()
-        
-        return render_template('index.html', output=output, status=status)
+        output = f"--- STDOUT ---\n{stdout}\n\n--- STDERR ---\n{stderr}"
+        if process.returncode != 0:
+            flash(f"Command finished with an error (Code: {process.returncode}). Check the output.", "error")
+        else:
+            flash("Command executed successfully!", "success")
 
     except subprocess.TimeoutExpired:
-        return render_template('index.html', output="Error: The command took too long to execute and was terminated.", status=get_services_status())
+        output = "Error: The command took too long to execute and was terminated."
+        flash(output, "error")
     except Exception as e:
-        return render_template('index.html', output=f"An error occurred: {str(e)}", status=get_services_status())
+        output = f"An error occurred while trying to run the command: {str(e)}"
+        flash(output, "error")
+
+    status = get_services_status()
+    return render_template('index.html', status=status, output=output, selected_script=script_name)
 
 
 def get_services_status():
@@ -87,22 +132,15 @@ def get_services_status():
     status = {}
     for name, service_file in services.items():
         try:
-            # Check if the service file exists first
             if not os.path.exists(f"/etc/systemd/system/{service_file}.service"):
-                 status[name] = "Not Installed"
-                 continue
+                status[name] = "Not Installed"
+                continue
             
-            # Check if the service is active
-            result = subprocess.run(['systemctl', 'is-active', service_file], capture_output=True, text=True)
-            if result.returncode == 0:
-                status[name] = "Active"
-            else:
-                status[name] = "Inactive"
+            result = subprocess.run(['systemctl', 'is-active', service_file], capture_output=True, text=True, check=False)
+            status[name] = "Active" if result.returncode == 0 else "Inactive"
         except Exception:
             status[name] = "Error Checking"
-            
     return status
 
 if __name__ == '__main__':
-    # This is for development only. Use Waitress in production.
     app.run(host='0.0.0.0', port=5001, debug=True)
