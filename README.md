@@ -35,5 +35,4 @@ Before you begin, ensure your server meets the following requirements:
 
 To install the MTProto Proxy Web UI, simply run the following command on your server as the root user:
 
-```bash
-git clone [https://github.com/Hamedgunner/MTProtoUI.git](https://github.com/Hamedgunner/MTProtoUI.git) && cd MTProtoUI && chmod +x install_webui.sh && sudo ./install_webui.sh
+```git clone https://github.com/Hamedgunner/MTProtoUI.git && cd MTProtoUI && chmod +x install_webui.sh && sudo ./install_webui.sh
