@@ -13,6 +13,14 @@
             <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
         </div>
 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         <div class="section">
             <h2>Service Status</h2>
             <div class="status-grid">
@@ -26,20 +34,85 @@
         </div>
 
         <div class="section">
-            <h2>Run a Command</h2>
-            <p>Select a script and provide arguments. Refer to the README for available options.</p>
-            <form action="{{ url_for('execute') }}" method="POST">
-                <label for="script">Select Script:</label>
-                <select name="script" id="script" required>
-                    <option value="MTProtoProxyOfficialInstall.sh">Official Proxy</option>
-                    <option value="MTProtoProxyInstall.sh">Python Proxy</option>
-                    <option value="MTGInstall.sh">Golang (MTG) Proxy</option>
+            <h2>Manage Proxies</h2>
+            <p>Select a proxy type to see its installation and management options.</p>
+            
+            <form id="main-form" action="{{ url_for('execute') }}" method="POST">
+                <label for="script-selector">Proxy Type:</label>
+                <select name="script" id="script-selector" onchange="showForm()">
+                    <option value="">-- Select a Proxy --</option>
+                    <option value="MTProtoProxyOfficialInstall.sh" {% if selected_script == 'MTProtoProxyOfficialInstall.sh' %}selected{% endif %}>Official Proxy</option>
+                    <option value="MTProtoProxyInstall.sh" {% if selected_script == 'MTProtoProxyInstall.sh' %}selected{% endif %}>Python Proxy</option>
+                    <option value="MTGInstall.sh" {% if selected_script == 'MTGInstall.sh' %}selected{% endif %}>Golang (MTG) Proxy</option>
                 </select>
 
-                <label for="args">Arguments (optional):</label>
-                <input type="text" id="args" name="args" placeholder="Example: --port 443 --secret YOUR_SECRET">
+                <div id="official-form" class="proxy-form" style="display:none;">
+                    <h3>Official Proxy (New Install)</h3>
+                    <p>Leave fields blank to use defaults or if not needed. Arguments are for keyless installation.</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="official-port">Port</label>
+                            <input type="text" id="official-port" name="official_port" placeholder="e.g., 443 (or leave for random)">
+                        </div>
+                        <div class="form-group">
+                            <label for="official-workers">Workers</label>
+                            <input type="number" id="official-workers" name="official_workers" placeholder="e.g., 2 (or leave for default)">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="official-secret">Secret</label>
+                            <div class="input-with-button">
+                                <input type="text" id="official-secret" name="official_secret" placeholder="32-char hex secret" required>
+                                <button type="button" onclick="generateSecret('official-secret')">Generate Random</button>
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="official-tag">Ad (Sponsor) Tag</label>
+                            <input type="text" id="official-tag" name="official_tag" placeholder="Optional tag from @MTProxybot">
+                        </div>
+                    </div>
+                     <button type="submit" class="submit-button">Install/Update Official Proxy</button>
+                </div>
 
-                <button type="submit">Execute</button>
+                <div id="python-form" class="proxy-form" style="display:none;">
+                    <h3>Python Proxy (Management)</h3>
+                    <p>Select an action to perform on the Python proxy service.</p>
+                     <div class="form-group">
+                        <label for="python-action">Action</label>
+                         <select id="python-action" name="python_action">
+                            <option value="1">View all connection links</option>
+                            <option value="4">Add a new secret</option>
+                            <option value="5">Revoke a secret</option>
+                            <option value="2">Upgrade proxy software</option>
+                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="python-username">Username</label>
+                        <input type="text" id="python-username" name="python_username" placeholder="Required for adding/revoking">
+                    </div>
+                    <div class="form-group">
+                        <label for="python-secret">Secret (for new user)</label>
+                         <div class="input-with-button">
+                            <input type="text" id="python-secret" name="python_secret" placeholder="Leave blank to auto-generate">
+                            <button type="button" onclick="generateSecret('python-secret')">Generate Random</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-button">Execute Python Command</button>
+                </div>
+
+                <div id="mtg-form" class="proxy-form" style="display:none;">
+                    <h3>Golang (MTG) Proxy (Management)</h3>
+                    <div class="form-group">
+                        <label for="mtg-action">Action</label>
+                         <select id="mtg-action" name="mtg_action">
+                             <option value="1">View connection link</option>
+                             <option value="2">Upgrade proxy software</option>
+                             <option value="3">Change AD TAG</option>
+                             <option value="4">Change secret</option>
+                             <option value="6">Uninstall Proxy</option>
+                         </select>
+                    </div>
+                    <button type="submit" class="submit-button">Execute MTG Command</button>
+                </div>
             </form>
         </div>
 
@@ -50,5 +123,35 @@
         </div>
         {% endif %}
     </div>
+
+    <script>
+        function generateSecret(elementId) {
+            const array = new Uint8Array(16);
+            window.crypto.getRandomValues(array);
+            const secret = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+            document.getElementById(elementId).value = secret;
+        }
+
+        function showForm() {
+            // Hide all forms first
+            document.getElementById('official-form').style.display = 'none';
+            document.getElementById('python-form').style.display = 'none';
+            document.getElementById('mtg-form').style.display = 'none';
+
+            const selectedValue = document.getElementById('script-selector').value;
+            if (selectedValue === 'MTProtoProxyOfficialInstall.sh') {
+                document.getElementById('official-form').style.display = 'block';
+            } else if (selectedValue === 'MTProtoProxyInstall.sh') {
+                document.getElementById('python-form').style.display = 'block';
+            } else if (selectedValue === 'MTGInstall.sh') {
+                document.getElementById('mtg-form').style.display = 'block';
+            }
+        }
+        
+        // On page load, show the correct form if a script was previously selected
+        document.addEventListener('DOMContentLoaded', function() {
+            showForm();
+        });
+    </script>
 </body>
 </html>
